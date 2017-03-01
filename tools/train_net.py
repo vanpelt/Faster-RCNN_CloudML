@@ -12,13 +12,27 @@
 import _init_paths
 from fast_rcnn.train import get_training_roidb, train_net
 from fast_rcnn.config import cfg,cfg_from_file, cfg_from_list, get_output_dir
-from datasets.factory import get_imdb
+from datasets.factory import get_cf_imdb
 from networks.factory import get_network
 import argparse
 import pprint
 import numpy as np
 import sys
 import pdb
+import os
+import subprocess
+    
+def sync_location(location, local_dir=None):
+    """
+    Copies folders and or files from google cloud storage to local storage
+    """
+    if location.startswith("gs://"):
+        if local_dir is not None:
+            subprocess.check_call(['mkdir', '-p', local_dir])
+        subprocess.check_call(['gsutil', '-qm', 'cp', '-r', location, local_dir])
+    
+    return local_dir or location.split("/")[-1]
+
 
 def parse_args():
     """
@@ -26,7 +40,7 @@ def parse_args():
     """
     parser = argparse.ArgumentParser(description='Train a Fast R-CNN network')
     parser.add_argument('--device', dest='device', help='device to use',
-                        default='cpu', type=str)
+                        default='gpu', type=str)
     parser.add_argument('--device_id', dest='device_id', help='device id to use',
                         default=0, type=int)
     parser.add_argument('--solver', dest='solver',
@@ -53,6 +67,24 @@ def parse_args():
     parser.add_argument('--set', dest='set_cfgs',
                         help='set config keys', default=None,
                         nargs=argparse.REMAINDER)
+    parser.add_argument('--image_path', dest='image_path',
+                        help='path to images for training',
+                        default=None, type=str)
+    parser.add_argument('--label_path', dest='label_path',
+                        help='path to label data for training',
+                        default=None, type=str)
+    parser.add_argument('--label_type', dest='label_type',
+                        help='type of labeled data (json or csv)',
+                        default=None, type=str)
+    parser.add_argument('--class_names_path', dest='class_names_path',
+                        help='path to class names for training',
+                        default=None, type=str)
+    parser.add_argument('--output_path', dest='output_path',
+                        help='path to store your output',
+                        default=None, type=str)
+    parser.add_argument('--gpu', dest='gpu_id',
+                        help='GPU device id to use [0]',
+                        default=0, type=int)
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -67,6 +99,11 @@ if __name__ == '__main__':
     print('Called with args:')
     print(args)
 
+    label_path = sync_location(args.label_path, "tmp_labels")
+    image_path = sync_location(args.image_path, "tmp_images")
+    class_names_path = sync_location(args.class_names_path)
+    cfg_file = sync_location(args.cfg_file)
+
     if args.cfg_file is not None:
         cfg_from_file(args.cfg_file)
     if args.set_cfgs is not None:
@@ -78,14 +115,15 @@ if __name__ == '__main__':
     if not args.randomize:
         # fix the random seeds (numpy and caffe) for reproducibility
         np.random.seed(cfg.RNG_SEED)
-    imdb = get_imdb(args.imdb_name)
-    print 'Loaded dataset `{:s}` for training'.format(imdb.name)
+        
+    imdb = get_cf_imdb(label_path, image_path, class_names_path, args.label_type)
+    print 'Loaded CrowdFlower dataset for training'
     roidb = get_training_roidb(imdb)
 
-    output_dir = get_output_dir(imdb, None)
+    output_dir = args.output_path
     print 'Output will be saved to `{:s}`'.format(output_dir)
 
-    device_name = '/{}:{:d}'.format(args.device,args.device_id)
+    device_name = '/{}:{:d}'.format(args.device,args.gpu_id)
     print device_name
 
     network = get_network(args.network_name)

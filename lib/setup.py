@@ -8,9 +8,28 @@
 import os
 from os.path import join as pjoin
 import numpy as np
-from distutils.core import setup
-from distutils.extension import Extension
-from Cython.Distutils import build_ext
+import subprocess
+from setuptools import setup, Extension
+from setuptools import find_packages
+from setuptools.command.build_ext import build_ext
+from setuptools.command.install import install as _install
+
+class MyInstall(_install):
+    def command(self, command_list):
+        print "Running command: %s" % command_list
+        subprocess.check_call(command_list)
+
+    def run(self):
+        _install.run(self)
+        
+        try:
+            #To prevent libdc1394 error
+            #self.execute(self.command, (["ln", "-f", "/dev/null", "/dev/raw1394"]))
+            #For tkinter from matplotlib.pyplot
+            self.execute(self.command, [['apt-get', 'update']])
+            self.execute(self.command, [['apt-get', '-y', 'install', 'python-tk']])
+        except:
+            print "You will likely need to install python-tk on your system"
 
 def find_in_path(name, path):
     "Find a file in a search path"
@@ -51,6 +70,14 @@ def locate_cuda():
             return None;
 
     return cudaconfig
+
+def locate_tf():
+    """Get the TENSORFLOW include"""
+    try:
+        import tensorflow as tf
+        return tf.sysconfig.get_include()
+    except ImportError:
+        return "/usr/local/include"
 
 CUDA = locate_cuda()
 
@@ -146,10 +173,49 @@ if CUDA:
             include_dirs = [numpy_include, CUDA['include']]
         )
     )
+    ext_modules.append(
+        Extension('roi_pooling_layer.roi_pooling',
+            ['roi_pooling_layer/roi_pooling_op_gpu.cu',
+            'roi_pooling_layer/roi_pooling_op.cc'],
+            library_dirs=[CUDA['lib64']],
+            libraries=['cudart'],
+            language='c++',
+            runtime_library_dirs=[CUDA['lib64']],
+            include_dirs=[locate_tf()],
+            extra_compile_args={
+                'gcc': ["-std=c++11", "-D GOOGLE_CUDA=1"],
+                'nvcc': [
+                    "-std=c++11",
+                    "-arch=sm_37",
+                    "-D GOOGLE_CUDA=1",
+                    "-Xcompiler",
+                    "-fPIC",
+                    "--expt-relaxed-constexpr"
+                ]
+            }
+        )
+    )
+else:
+    ext_modules.append(
+        Extension('roi_pooling_layer.roi_pooling',
+            ['roi_pooling_layer/roi_pooling_op.cc'],
+            language='c++',
+            include_dirs=[locate_tf()],
+            extra_compile_args={
+                'gcc': ["-std=c++11", "-D GOOGLE_CUDA=1"]
+            }
+        )
+    )
+
+VERSION="0.1.0"
 
 setup(
     name='fast_rcnn',
+    version=VERSION,
     ext_modules=ext_modules,
-    # inject our custom trigger
-    cmdclass={'build_ext': custom_build_ext},
+    setup_requires=['setuptools>=18.0','cython','numpy'],
+    packages=find_packages(),
+    install_requires=['cython', 'numpy', 'scipy', 'pillow', 'boto', 'easydict', 'pyyaml','matplotlib','opencv-python'],
+    # inject our custom triggers
+    cmdclass={'build_ext': custom_build_ext, 'install': MyInstall},
 )

@@ -1,4 +1,6 @@
 *.pyc
 *.so
 *.o
-faster_rcnn_models
+dist
+.eggs
+*.egg-info

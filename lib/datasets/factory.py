@@ -13,6 +13,7 @@ import datasets.pascal_voc
 import datasets.imagenet3d
 import datasets.kitti
 import datasets.kitti_tracking
+import datasets.crowdflower
 import numpy as np
 
 def _selective_search_IJCV_top_k(split, year, top_k):
@@ -81,6 +82,11 @@ def get_imdb(name):
     if not __sets.has_key(name):
         raise KeyError('Unknown dataset: {}'.format(name))
     return __sets[name]()
+
+def get_cf_imdb(label_path, img_path, class_names_path, label_type):
+    """Get an arbitrary CrowdFlower dataset"""
+
+    return datasets.crowdflower.cfimdb(label_path, img_path, class_names_path, label_type)
 
 def list_imdbs():
     """List all registered imdbs."""
