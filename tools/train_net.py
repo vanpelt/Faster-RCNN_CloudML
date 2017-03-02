@@ -12,7 +12,7 @@
 import _init_paths
 from fast_rcnn.train import get_training_roidb, train_net
 from fast_rcnn.config import cfg,cfg_from_file, cfg_from_list, get_output_dir
-from datasets.factory import get_cf_imdb, get_imdb
+from datasets.factory import get_cf_imdb, get_imdb, list_imdbs
 from networks.factory import get_network
 import argparse
 import pprint
@@ -127,7 +127,7 @@ if __name__ == '__main__':
         # fix the random seeds (numpy and caffe) for reproducibility
         np.random.seed(cfg.RNG_SEED)
         
-    imdb = None
+    print list_imdbs()
     if args.imdb_name is None:
         print 'Loaded CrowdFlower dataset for training'
         imdb = get_cf_imdb(label_path, image_path, class_names_path, args.label_type)
@@ -137,6 +137,7 @@ if __name__ == '__main__':
         if args.imdb_data_url is not None:
             sync_location(args.imdb_data_url, os.path.join(cfg.DATA_DIR, 'VOCdevkit2007'))
         imbd = get_imdb(args.imdb_name)
+        print imdb
 
     roidb = get_training_roidb(imdb)
 
