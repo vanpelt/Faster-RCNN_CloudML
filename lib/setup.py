@@ -183,7 +183,7 @@ if CUDA:
             runtime_library_dirs=[CUDA['lib64']],
             include_dirs=[locate_tf()],
             extra_compile_args={
-                'gcc': ["-std=c++11", "-D GOOGLE_CUDA=1"],
+                'gcc': ["-std=c++11", "-D GOOGLE_CUDA=1", "-D_GLIBCXX_USE_CXX11_ABI=0"],
                 'nvcc': [
                     "-std=c++11",
                     "-arch=sm_37",

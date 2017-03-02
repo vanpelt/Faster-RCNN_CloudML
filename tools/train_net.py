@@ -22,16 +22,18 @@ import pdb
 import os
 import subprocess
     
-def sync_location(location, local_dir=None):
+def sync_location(location, local_dir="."):
     """
     Copies folders and or files from google cloud storage to local storage
     """
     if location.startswith("gs://"):
-        if local_dir is not None:
+        result = location.split("/")[-1]
+        if local_dir is not ".":
             subprocess.check_call(['mkdir', '-p', local_dir])
+            result = local_dir
         subprocess.check_call(['gsutil', '-qm', 'cp', '-r', location, local_dir])
     
-    return local_dir or location.split("/")[-1]
+    return result
 
 
 def parse_args():
@@ -64,9 +66,6 @@ def parse_args():
     parser.add_argument('--network', dest='network_name',
                         help='name of the network',
                         default=None, type=str)
-    parser.add_argument('--set', dest='set_cfgs',
-                        help='set config keys', default=None,
-                        nargs=argparse.REMAINDER)
     parser.add_argument('--image_path', dest='image_path',
                         help='path to images for training',
                         default=None, type=str)
@@ -101,13 +100,9 @@ if __name__ == '__main__':
 
     label_path = sync_location(args.label_path, "tmp_labels")
     image_path = sync_location(args.image_path, "tmp_images")
-    class_names_path = sync_location(args.class_names_path)
-    cfg_file = sync_location(args.cfg_file)
-
-    if args.cfg_file is not None:
-        cfg_from_file(args.cfg_file)
-    if args.set_cfgs is not None:
-        cfg_from_list(args.set_cfgs)
+    class_names_path = sync_location(args.class_names_path, ".")
+    cfg_file = sync_location(args.cfg_file, ".")
+    cfg_from_file(cfg_file)
 
     print('Using config:')
     pprint.pprint(cfg)
