@@ -12,7 +12,7 @@
 import _init_paths
 from fast_rcnn.train import get_training_roidb, train_net
 from fast_rcnn.config import cfg,cfg_from_file, cfg_from_list, get_output_dir
-from datasets.factory import get_cf_imdb
+from datasets.factory import get_cf_imdb, get_imdb
 from networks.factory import get_network
 import argparse
 import pprint
@@ -26,6 +26,8 @@ def sync_location(location, local_dir="."):
     """
     Copies folders and or files from google cloud storage to local storage
     """
+    if location is None:
+        return None
     result = location.split("/")[-1]
     if location.startswith("gs://"):  
         if local_dir is not ".":
@@ -63,7 +65,10 @@ def parse_args():
                         default=None, type=str)
     parser.add_argument('--imdb', dest='imdb_name',
                         help='dataset to train on',
-                        default='kitti_train', type=str)
+                        default=None, type=str)
+    parser.add_argument('--imdb_data_url', dest='imdb_data_url',
+                        help='A location to download the dataset from',
+                        default=None, type=str)
     parser.add_argument('--rand', dest='randomize',
                         help='randomize (do not use a fixed seed)',
                         action='store_true')
@@ -119,8 +124,15 @@ if __name__ == '__main__':
         # fix the random seeds (numpy and caffe) for reproducibility
         np.random.seed(cfg.RNG_SEED)
         
-    imdb = get_cf_imdb(label_path, image_path, class_names_path, args.label_type)
-    print 'Loaded CrowdFlower dataset for training'
+    if args.imdb_name is None:
+        print 'Loaded CrowdFlower dataset for training'
+        imdb = get_cf_imdb(label_path, image_path, class_names_path, args.label_type)
+    else:
+        print 'Loading IMDB %s' % args.imdb_name
+        imbd = get_imdb(args.imdb_name)
+        if args.imdb_data_url is not None:
+            sync_location(args.imdb_data_url, imbd._get_default_path()) 
+
     roidb = get_training_roidb(imdb)
 
     output_dir = args.output_path
@@ -133,5 +145,5 @@ if __name__ == '__main__':
     print 'Use network `{:s}` in training'.format(args.network_name)
 
     train_net(network, imdb, roidb, output_dir,
-              pretrained_model=args.pretrained_model,
+              pretrained_model=pretrained_model,
               max_iters=args.max_iters)

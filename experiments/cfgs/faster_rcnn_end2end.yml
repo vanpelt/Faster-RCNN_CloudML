@@ -1,4 +1,5 @@
 EXP_DIR: faster_rcnn_end2end
+DATA_DIR: data
 TRAIN:
   HAS_RPN: True
   IMS_PER_BATCH: 1

@@ -20,12 +20,23 @@ PROJECT_ID=`gcloud config list project --format "value(core.project)"`
 TRAIN_BUCKET=gs://${PROJECT_ID}-ml
 TRAIN_PATH=${TRAIN_BUCKET}/${JOB_NAME}
 
-read -d '' TRAIN_ARGS <<EOF
+read -d '' TRAIN_ARGS_CF <<EOF
    --image_path $TRAIN_BUCKET/$NAME/source/*
    --label_path $TRAIN_BUCKET/$NAME/labels/*
    --label_type json
    --output_path $TRAIN_BUCKET/$NAME/train/
    --class_names_path $TRAIN_BUCKET/$NAME/class_names.json
+   --network VGGnet_train
+   --weights $TRAIN_BUCKET/VGG_imagenet.npy
+   --cfg $TRAIN_BUCKET/$NAME/cfg.yml
+   --gpu 0
+   --iters 1000
+EOF
+
+read -d '' TRAIN_ARGS_VOC <<EOF
+   --imdb voc_2007_trainval
+   --imdb_data_url $TRAIN_BUCKET/VOC2007
+   --output_path $TRAIN_BUCKET/$NAME/train/
    --network VGGnet_train
    --weights $TRAIN_BUCKET/VGG_imagenet.npy
    --cfg $TRAIN_BUCKET/$NAME/cfg.yml
@@ -49,7 +60,7 @@ then
        --package-path=tools \
        --module-name=tools.train_net \
        -- \
-       ${TRAIN_ARGS}
+       ${TRAIN_ARGS_VOC}
 else
     echo "Running in cloud -- ${TRAIN_ARGS}"
     gcloud beta ml jobs submit training ${JOB_NAME} \
@@ -60,5 +71,5 @@ else
 	   --region=us-east1 \
 	   --config=config/cloudml.yml \
 	   -- \
-	   ${TRAIN_ARGS}
+	   ${TRAIN_ARGS_VOC}
 fi
