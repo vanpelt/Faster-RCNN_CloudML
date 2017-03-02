@@ -12,7 +12,7 @@
 import _init_paths
 from fast_rcnn.train import get_training_roidb, train_net
 from fast_rcnn.config import cfg,cfg_from_file, cfg_from_list, get_output_dir
-from datasets.factory import get_cf_imdb, get_imdb, list_imdbs
+from datasets.factory import get_cf_imdb, get_imdb
 from networks.factory import get_network
 import argparse
 import pprint
@@ -37,9 +37,7 @@ def sync_location(location, local_dir="."):
                 return result
             else:
                 subprocess.check_call(['mkdir', '-p', local_dir])
-        # Cache
-        if os.path.exists(result):
-            return result
+        # TODO: Don't download everything again in local testing...
         subprocess.check_call(['gsutil', '-qm', 'cp', '-r', location, local_dir])
         
     return result

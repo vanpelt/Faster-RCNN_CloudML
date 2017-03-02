@@ -23,8 +23,6 @@ class MyInstall(_install):
         _install.run(self)
         
         try:
-            #To prevent libdc1394 error
-            #self.execute(self.command, (["ln", "-f", "/dev/null", "/dev/raw1394"]))
             #For tkinter from matplotlib.pyplot
             self.execute(self.command, [['apt-get', 'update']])
             self.execute(self.command, [['apt-get', '-y', 'install', 'python-tk']])

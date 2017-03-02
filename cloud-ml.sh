@@ -1,9 +1,9 @@
 LOCAL=0
-INSTALL=0
-while getopts ":l" o; do
+CF=1
+while getopts ":l:v" o; do
     case "${o}" in
 	l) LOCAL=1;;
-	i) INSTALL=1;;
+    v) CF=0;;
     esac
 done
 NAME=${@:$OPTIND:1}
@@ -13,7 +13,7 @@ then
 	echo "You must specify a name.  If you want to run locally use -l, i.e. ./cloud-ml.sh -l my-name"
 	exit 1
 fi
-	
+
 JOB_NAME=${NAME/-/_}_${USER}_$(date +%Y%m%d_%H%M%S)
 
 PROJECT_ID=`gcloud config list project --format "value(core.project)"`
@@ -30,7 +30,7 @@ read -d '' TRAIN_ARGS_CF <<EOF
    --weights $TRAIN_BUCKET/VGG_imagenet.npy
    --cfg $TRAIN_BUCKET/$NAME/cfg.yml
    --gpu 0
-   --iters 1000
+   --iters 400
 EOF
 
 read -d '' TRAIN_ARGS_VOC <<EOF
@@ -41,8 +41,15 @@ read -d '' TRAIN_ARGS_VOC <<EOF
    --weights $TRAIN_BUCKET/VGG_imagenet.npy
    --cfg $TRAIN_BUCKET/$NAME/cfg.yml
    --gpu 0
-   --iters 1000
+   --iters 10000
 EOF
+
+if [ $CF -eq 1 ]
+then
+    TRAIN_ARGS=$TRAIN_ARGS_CF
+else
+	TRAIN_ARGS=$TRAIN_ARGS_VOC
+fi
 
 FRCNN_PACKAGE=lib/dist/fast_rcnn-0.1.0.tar.gz
 cd lib
@@ -52,15 +59,12 @@ cd ../
 if [ $LOCAL -eq 1 ] 
 then
     echo "Running Locally -- ${TRAIN_ARGS}"
-	if [ $INSTALL -eq 1 ]
-	then
-		pip install --upgrade --force-reinstall $FRCNN_PACKAGE
-	fi
+	pip install --upgrade --force-reinstall $FRCNN_PACKAGE
     gcloud beta ml local train \
        --package-path=tools \
        --module-name=tools.train_net \
        -- \
-       ${TRAIN_ARGS_VOC}
+       ${TRAIN_ARGS}
 else
     echo "Running in cloud -- ${TRAIN_ARGS}"
     gcloud beta ml jobs submit training ${JOB_NAME} \
@@ -71,5 +75,5 @@ else
 	   --region=us-east1 \
 	   --config=config/cloudml.yml \
 	   -- \
-	   ${TRAIN_ARGS_VOC}
+	   ${TRAIN_ARGS}
 fi
