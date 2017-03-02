@@ -32,10 +32,13 @@ def sync_location(location, local_dir="."):
     if location.startswith("gs://"):  
         if local_dir is not ".":
             result = local_dir
-            if local_dir.count(".") == 0:
+            #Cache
+            if os.path.exists(result):
+                return result
+            else:
                 subprocess.check_call(['mkdir', '-p', local_dir])
-        # Cache    
-        if result.count(".") > 0 and os.path.exists(result):
+        # Cache
+        if os.path.exists(result):
             return result
         subprocess.check_call(['gsutil', '-qm', 'cp', '-r', location, local_dir])
         
@@ -109,8 +112,8 @@ if __name__ == '__main__':
 
     label_path = sync_location(args.label_path, "tmp_labels")
     image_path = sync_location(args.image_path, "tmp_images")
-    class_names_path = sync_location(args.class_names_path, ".")
-    cfg_file = sync_location(args.cfg_file, ".")
+    class_names_path = sync_location(args.class_names_path)
+    cfg_file = sync_location(args.cfg_file)
     cfg_from_file(cfg_file)
 
     pretrained_model = None
