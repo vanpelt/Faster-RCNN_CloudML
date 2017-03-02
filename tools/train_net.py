@@ -32,13 +32,9 @@ def sync_location(location, local_dir="."):
     if location.startswith("gs://"):  
         if local_dir is not ".":
             result = local_dir
-            #Cache
-            if os.path.exists(result):
-                return result
-            else:
-                subprocess.check_call(['mkdir', '-p', local_dir])
+            subprocess.check_call(['mkdir', '-p', local_dir])
         # TODO: Don't download everything again in local testing...
-        subprocess.check_call(['gsutil', '-qm', 'cp', '-r', location, local_dir])
+        subprocess.check_call(['gsutil', '-qm', 'cp', '-rn', location, local_dir])
         
     return result
 
@@ -127,9 +123,11 @@ if __name__ == '__main__':
         
     if args.imdb_name is None:
         print 'Loaded CrowdFlower dataset for training'
+        n_classes = 2
         imdb = get_cf_imdb(label_path, image_path, class_names_path, args.label_type)
     else:
         print 'Loading IMDB %s' % args.imdb_name
+        n_classes = 21
         # TODO: this is hardcoded to VOC for now...
         if args.imdb_data_url is not None:
             sync_location(args.imdb_data_url, os.path.join(cfg.DATA_DIR, 'VOCdevkit2007'))
@@ -143,7 +141,7 @@ if __name__ == '__main__':
     device_name = '/{}:{:d}'.format(args.device,args.gpu_id)
     print device_name
 
-    network = get_network(args.network_name)
+    network = get_network(args.network_name, n_classes=n_classes)
     print 'Use network `{:s}` in training'.format(args.network_name)
 
     train_net(network, imdb, roidb, output_dir,

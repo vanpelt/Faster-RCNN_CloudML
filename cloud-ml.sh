@@ -24,19 +24,19 @@ read -d '' TRAIN_ARGS_CF <<EOF
    --image_path $TRAIN_BUCKET/$NAME/source/*
    --label_path $TRAIN_BUCKET/$NAME/labels/*
    --label_type json
-   --output_path $TRAIN_BUCKET/$NAME/train/
+   --output_path $TRAIN_PATH
    --class_names_path $TRAIN_BUCKET/$NAME/class_names.json
    --network VGGnet_train
    --weights $TRAIN_BUCKET/VGG_imagenet.npy
    --cfg $TRAIN_BUCKET/$NAME/cfg.yml
    --gpu 0
-   --iters 400
+   --iters 70000
 EOF
 
 read -d '' TRAIN_ARGS_VOC <<EOF
    --imdb voc_2007_trainval
    --imdb_data_url $TRAIN_BUCKET/VOC2007
-   --output_path $TRAIN_BUCKET/$NAME/train/
+   --output_path $TRAIN_PATH
    --network VGGnet_train
    --weights $TRAIN_BUCKET/VGG_imagenet.npy
    --cfg $TRAIN_BUCKET/$NAME/cfg.yml

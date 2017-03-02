@@ -1,21 +1,20 @@
 import tensorflow as tf
 from networks.network import Network
 
-n_classes = 21
 _feat_stride = [16,]
 anchor_scales = [8, 16, 32] 
 
 class VGGnet_test(Network):
-    def __init__(self, trainable=True):
+    def __init__(self, trainable=True, n_classes=21):
         self.inputs = []
         self.data = tf.placeholder(tf.float32, shape=[None, None, None, 3])
         self.im_info = tf.placeholder(tf.float32, shape=[None, 3])
         self.keep_prob = tf.placeholder(tf.float32)
         self.layers = dict({'data':self.data, 'im_info':self.im_info})
         self.trainable = trainable
-        self.setup()
+        self.setup(n_classes)
 
-    def setup(self):
+    def setup(self, n_classes):
         (self.feed('data')
              .conv(3, 3, 64, 1, 1, name='conv1_1', trainable=False)
              .conv(3, 3, 64, 1, 1, name='conv1_2', trainable=False)
