@@ -6,7 +6,7 @@ This is a fork of [@smallcorgi](smallcorgi/Faster-RCNN_TF)'s experimental Tensor
 
 ### Cloud
 
-Creater a Google Cloud project and enable Cloud ML as described [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up)
+Create a Google Cloud Project and enable Cloud ML as described [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up)
 
 ### Local
 
