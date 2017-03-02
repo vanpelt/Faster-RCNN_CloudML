@@ -26,8 +26,8 @@ read -d '' TRAIN_ARGS <<EOF
    --label_type json
    --output_path $TRAIN_BUCKET/$NAME/train/
    --class_names_path $TRAIN_BUCKET/$NAME/class_names.json
-   --network VGG_imagenet
-   --weights https://drive.google.com/open?id=0ByuDEGFYmWsbNVF5eExySUtMZmM
+   --network VGGnet_train
+   --weights $TRAIN_BUCKET/VGG_imagenet.npy
    --cfg $TRAIN_BUCKET/$NAME/cfg.yml
    --gpu 0
    --iters 1000

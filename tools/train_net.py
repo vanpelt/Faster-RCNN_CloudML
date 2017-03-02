@@ -29,17 +29,13 @@ def sync_location(location, local_dir="."):
     result = location.split("/")[-1]
     if location.startswith("gs://"):  
         if local_dir is not ".":
-            subprocess.check_call(['mkdir', '-p', local_dir])
             result = local_dir
+            if local_dir.count(".") == 0:
+                subprocess.check_call(['mkdir', '-p', local_dir])
+        # Cache    
+        if result.count(".") > 0 and os.path.exists(result):
+            return result
         subprocess.check_call(['gsutil', '-qm', 'cp', '-r', location, local_dir])
-    elif location.startswith("http"):
-        if local_dir is not ".":
-            result = local_dir
-            if os.path.exists(result):
-                return result
-        subprocess.check_call(['curl', location, '--output', result])
-        if location.endswith("tar.gz"):
-            subprocess.check_call(['tar', '-xf', result])
         
     return result
 
@@ -114,8 +110,7 @@ if __name__ == '__main__':
 
     pretrained_model = None
     if args.pretrained_model is not None:
-        pretrained_model = sync_location(args.pretrained_model, args.network_name + ".npy")
-
+        pretrained_model = sync_location(args.pretrained_model)
 
     print('Using config:')
     pprint.pprint(cfg)
