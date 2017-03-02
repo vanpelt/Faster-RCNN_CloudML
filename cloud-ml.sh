@@ -26,10 +26,11 @@ read -d '' TRAIN_ARGS <<EOF
    --label_type json
    --output_path $TRAIN_BUCKET/$NAME/train/
    --class_names_path $TRAIN_BUCKET/$NAME/class_names.json
-   --network Resnet_train
+   --network VGG_imagenet
+   --weights https://drive.google.com/open?id=0ByuDEGFYmWsbNVF5eExySUtMZmM
    --cfg $TRAIN_BUCKET/$NAME/cfg.yml
    --gpu 0
-   --iters 10000
+   --iters 1000
 EOF
 
 FRCNN_PACKAGE=lib/dist/fast_rcnn-0.1.0.tar.gz

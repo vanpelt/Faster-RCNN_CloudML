@@ -148,7 +148,7 @@ class SolverWrapper(object):
         train_op = tf.train.MomentumOptimizer(lr, momentum).minimize(loss, global_step=global_step)
 
         # iintialize variables
-        sess.run(tf.global_variables_initializer())
+        sess.run(tf.initialize_all_variables())
         if self.pretrained_model is not None:
             print ('Loading pretrained model '
                    'weights from {:s}').format(self.pretrained_model)

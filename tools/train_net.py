@@ -26,13 +26,21 @@ def sync_location(location, local_dir="."):
     """
     Copies folders and or files from google cloud storage to local storage
     """
-    if location.startswith("gs://"):
-        result = location.split("/")[-1]
+    result = location.split("/")[-1]
+    if location.startswith("gs://"):  
         if local_dir is not ".":
             subprocess.check_call(['mkdir', '-p', local_dir])
             result = local_dir
         subprocess.check_call(['gsutil', '-qm', 'cp', '-r', location, local_dir])
-    
+    elif location.startswith("http"):
+        if local_dir is not ".":
+            result = local_dir
+            if os.path.exists(result):
+                return result
+        subprocess.check_call(['curl', location, '--output', result])
+        if location.endswith("tar.gz"):
+            subprocess.check_call(['tar', '-xf', result])
+        
     return result
 
 
@@ -103,6 +111,11 @@ if __name__ == '__main__':
     class_names_path = sync_location(args.class_names_path, ".")
     cfg_file = sync_location(args.cfg_file, ".")
     cfg_from_file(cfg_file)
+
+    pretrained_model = None
+    if args.pretrained_model is not None:
+        pretrained_model = sync_location(args.pretrained_model, args.network_name + ".npy")
+
 
     print('Using config:')
     pprint.pprint(cfg)

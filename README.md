@@ -19,6 +19,7 @@ VirtualEnv, Install tensorflow
 
 3. Build and install the python requirements locally
 
+**Be sure to set CUDAHOME**
 ```Shell
 cd lib
 python setup.py build_ext --inplace
