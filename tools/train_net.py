@@ -127,7 +127,6 @@ if __name__ == '__main__':
         # fix the random seeds (numpy and caffe) for reproducibility
         np.random.seed(cfg.RNG_SEED)
         
-    print list_imdbs()
     if args.imdb_name is None:
         print 'Loaded CrowdFlower dataset for training'
         imdb = get_cf_imdb(label_path, image_path, class_names_path, args.label_type)
@@ -136,8 +135,7 @@ if __name__ == '__main__':
         # TODO: this is hardcoded to VOC for now...
         if args.imdb_data_url is not None:
             sync_location(args.imdb_data_url, os.path.join(cfg.DATA_DIR, 'VOCdevkit2007'))
-        imbd = get_imdb(args.imdb_name)
-        print imdb
+        imdb = get_imdb(args.imdb_name)
 
     roidb = get_training_roidb(imdb)
 
